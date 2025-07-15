@@ -16,3 +16,12 @@ df = df.withColumn("day_of_week", dayofweek("datetime"))
 df = df.withColumn("month", month("datetime"))
 
 
+df = df.dropna()
+
+print(f"Total rows after cleaning: {df.count()}")
+print(df.show(5))
+
+
+df.write.mode("overwrite").parquet(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\processed.parquet")
+
+spark.stop()
