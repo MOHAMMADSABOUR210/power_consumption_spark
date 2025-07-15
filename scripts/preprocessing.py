@@ -1,10 +1,8 @@
-import os
-os.environ["PYSPARK_PYTHON"] = r"D:\Programming\Data_Engineering\Apache_Spark\spark-env\Scripts\python.exe"
-os.environ["PYSPARK_DRIVER_PYTHON"] = r"D:\Programming\Data_Engineering\Apache_Spark\spark-env\Scripts\python.exe"
+from pyspark.sql import SparkSession
 
-from pyspark import SparkContext ,SparkConf 
+spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
-conf = SparkConf().setAppName("MyApp").setMaster("local")
-sc = SparkContext(conf=conf)
+df = spark.read.csv("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\power.csv", header=True, inferSchema=True)
 
-
+print(df.printSchema())
+print(df.show(5))

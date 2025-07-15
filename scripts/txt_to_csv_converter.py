@@ -1,7 +1,7 @@
 import csv
 
-input_file = 'input.txt'   # Replace with your actual txt file name
-output_file = 'output.csv' # Output CSV file name
+input_file = '../Data/electricityloaddiagrams20112014/LD2011_2014.txt'   # Replace with your actual txt file name
+output_file = '../Data/power.csv' # Output CSV file name
 
 with open(input_file, 'r', encoding='utf-8') as txtfile, \
      open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
