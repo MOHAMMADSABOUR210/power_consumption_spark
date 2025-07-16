@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month
+from pyspark.sql.functions import  hour, dayofweek, month,stddev
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import VectorAssembler 
 import numpy as np
@@ -55,3 +55,12 @@ df = df.dropDuplicates()
 print("After dropping duplicates: ", df.count())
 
 
+print("Before dropping constant columns: ", len(df.columns))
+
+for col in df.columns:
+    std = df.select(stddev(col)).first()[0]
+    if std == 0 or std is None:
+        df = df.drop(col)
+
+print("After dropping constant columns: ", len(df.columns))
+print(df.columns)
