@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import to_timestamp, hour, dayofweek, month,col
+from pyspark.sql.functions import  hour, dayofweek, month,col
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import VectorAssembler 
 import numpy as np
@@ -9,15 +9,12 @@ spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
 df = spark.read.csv(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\power.csv", header=True, inferSchema=True)
 
+print("Schema:")
 for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-df = df.withColumn("datetime", to_timestamp("datetime", "yyyy-MM-dd HH:mm:ss"))
-
-for c in df.columns:
-    if c != "datetime":
-        df = df.withColumn(c, col(c).cast(DoubleType()))
+print(df.show(5))
 
 
 df = df.withColumn("hour", hour("datetime"))
@@ -29,9 +26,11 @@ df = df.dropna()
 print("after dropna : ",df.count())
 
 
-print("Before dropping highly correlated columns: ", df.columns)
+print("Before dropping highly correlated columns: ", len(df.columns))
 def drop_highly_correlated_columns(df, threshold=0.95):
-    cols = df.columns
+
+    cols = [col for col, dtype in df.dtypes if dtype in ('double', 'int', 'float', 'long')]
+    
     assembler = VectorAssembler(inputCols=cols, outputCol="features")
     vector_df = assembler.transform(df).select("features")
 
@@ -46,6 +45,6 @@ def drop_highly_correlated_columns(df, threshold=0.95):
     return df.drop(*to_drop)
 
 
-df = drop_highly_correlated_columns(df, threshold=0.95)
+df = drop_highly_correlated_columns(df, threshold=0.9)
 
-print("Columns after dropping highly correlated ones: ", df.columns)
+print("Columns after dropping highly correlated ones: ", len(df.columns))
