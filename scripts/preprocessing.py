@@ -3,6 +3,7 @@ from pyspark.sql.functions import to_timestamp, hour, dayofweek, month,col
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import VectorAssembler 
 import numpy as np
+from pyspark.sql.types import DoubleType
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
@@ -13,6 +14,11 @@ for field in df.schema.fields:
 
 
 df = df.withColumn("datetime", to_timestamp("datetime", "yyyy-MM-dd HH:mm:ss"))
+
+for c in df.columns:
+    if c != "datetime":
+        df = df.withColumn(c, col(c).cast(DoubleType()))
+
 
 df = df.withColumn("hour", hour("datetime"))
 df = df.withColumn("day_of_week", dayofweek("datetime"))
