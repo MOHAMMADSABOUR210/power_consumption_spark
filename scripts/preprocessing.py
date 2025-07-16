@@ -13,7 +13,7 @@ for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-print(df.show(5))
+print(df.select(df.columns[:10]).show(5))
 
 
 df = df.withColumn("hour", hour("datetime"))
@@ -49,5 +49,9 @@ df = drop_highly_correlated_columns(df, threshold=0.9)
 
 print("Columns after dropping highly correlated ones: ", len(df.columns))
 
+
+print("Before dropping duplicates: ", df.count())
+df = df.dropDuplicates()
+print("After dropping duplicates: ", df.count())
 
 
