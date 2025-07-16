@@ -57,7 +57,13 @@ print("After dropping duplicates: ", df.count())
 
 print("Before dropping constant columns: ", len(df.columns))
 
-for col in df.columns:
+time_col = "datetime"
+
+cols = df.columns
+numeric_cols = [c for c in cols if c != time_col]
+
+for col in numeric_cols:
+    
     std = df.select(stddev(col)).first()[0]
     if std == 0 or std is None:
         df = df.drop(col)
