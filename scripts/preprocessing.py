@@ -1,7 +1,11 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean
+from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
+import random
+from pyspark.ml.linalg import Vectors, DenseVector
+from pyspark.sql.types import FloatType
+
 
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
@@ -13,12 +17,11 @@ for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-import random
-
+print("100 sample with 10 columns: ")
 timestamp_col = "datetime"
 
 other_columns = [col for col in df.columns if col != timestamp_col]
-selected_columns = random.sample(other_columns, 20)
+selected_columns = random.sample(other_columns, 10)
 
 selected_columns = [timestamp_col] + selected_columns
 
@@ -65,12 +68,13 @@ df = df.dropDuplicates()
 print("After dropping duplicates: ", df.count())
 
 
-print("Before dropping constant columns: ", len(df.columns))
-
 time_col = "datetime"
 
 cols = df.columns
 numeric_cols = [c for c in cols if c != time_col]
+
+
+print("Before dropping constant columns: ", len(df.columns))
 
 for col in numeric_cols:
     
@@ -99,3 +103,9 @@ df = assembler.transform(df)
 
 scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
 df = scaler.fit(df).transform(df)
+
+
+min_udf = udf(lambda vec: float(min(vec)), FloatType())
+max_udf = udf(lambda vec: float(max(vec)), FloatType())
+
+df.select(min_udf("scaled_features").alias("min_val"), max_udf("scaled_features").alias("max_val")).show()
