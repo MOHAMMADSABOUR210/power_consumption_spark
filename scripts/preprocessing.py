@@ -4,11 +4,12 @@ from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
 from pyspark.sql.types import FloatType
-
-
-
+from pyspark.ml.functions import vector_to_array
+from pyspark.sql.functions import col
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
+
+
 
 df = spark.read.csv(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\power.csv", header=True, inferSchema=True)
 
@@ -102,6 +103,11 @@ df = assembler.transform(df)
 scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
 df = scaler.fit(df).transform(df)
 
+df = df.withColumn("features_array", vector_to_array(col("scaled_features")))
+
+num_features = len(numeric_cols)
+for i in range(num_features):
+    df = df.withColumn(f"feature_{i+1}", col("features_array")[i])
 
 min_udf = udf(lambda vec: float(min(vec)), FloatType())
 max_udf = udf(lambda vec: float(max(vec)), FloatType())
@@ -118,4 +124,5 @@ df = df.withColumn("day_period",
                    .when(df["hour"] < 18, "afternoon")
                    .otherwise("evening"))
 print(df.select("day_period").show(10))
+
 
