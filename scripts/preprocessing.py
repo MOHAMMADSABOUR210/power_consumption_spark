@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev
+from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import VectorAssembler 
 import numpy as np
@@ -70,3 +70,15 @@ for col in numeric_cols:
 
 print("After dropping constant columns: ", len(df.columns))
 print(df.columns)
+
+
+
+print(f"Befor remove outlier rows : {df.count()}")
+
+for col in numeric_cols:
+    stats = df.select(mean(col), stddev(col)).first()
+    mean_val, std_val = stats
+    if std_val is not None and std_val != 0:
+        df = df.filter((df[col] >= mean_val - 3 * std_val) & (df[col] <= mean_val + 3 * std_val))
+
+print(f"After remove outlier rows : {df.count()}")
