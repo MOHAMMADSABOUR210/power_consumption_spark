@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf, when
+from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf, when,to_timestamp
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
@@ -25,7 +25,7 @@ print("50 sample with 10 columns: ")
 timestamp_col = "DATE"
 
 other_columns = [col for col in df.columns if col != timestamp_col]
-selected_columns = random.sample(other_columns, 10)
+selected_columns = random.sample(other_columns, 11)
 
 selected_columns = [timestamp_col] + selected_columns
 
@@ -33,9 +33,15 @@ sampled_rows = df.select(selected_columns).sample(withReplacement=False, fractio
 
 print(sampled_rows.show(50))
 
+df = df.withColumn("DATE", to_timestamp("DATE", "M/d/yyyy H:mm"))
+
 df = df.withColumn("hour", hour("DATE"))
 df = df.withColumn("day_of_week", dayofweek("DATE"))
 df = df.withColumn("month", month("DATE"))
+
+print("Schema:")
+for field in df.schema.fields:
+    print(f"{field.name}: {field.dataType}")
 
 print("Befor dropna : ",df.count())
 df = df.dropna()
