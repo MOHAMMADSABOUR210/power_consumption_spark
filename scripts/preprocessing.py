@@ -1,17 +1,20 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf, when,to_timestamp
+from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean , when,to_timestamp
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
-from pyspark.sql.functions import col
-from pyspark.ml.functions import vector_to_array as vec_to_arr
+from pyspark.sql.functions import col as col_funs
+import importlib
+import pyspark.ml.functions
+importlib.reload(pyspark.ml.functions)
+from pyspark.ml.functions import vector_to_array
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
 
 
-df1 = spark.read.csv("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_A.csv", header=True, inferSchema=True)
-df2 = spark.read.csv("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_B.csv", header=True, inferSchema=True)
+df1 = spark.read.csv(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_A.csv", header=True, inferSchema=True)
+df2 = spark.read.csv(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_B.csv", header=True, inferSchema=True)
 
 df = df1.unionByName(df2)
 
@@ -38,9 +41,6 @@ df = df.withColumn("hour", hour("DATE"))
 df = df.withColumn("day_of_week", dayofweek("DATE"))
 df = df.withColumn("month", month("DATE"))
 
-print("Schema:")
-for field in df.schema.fields:
-    print(f"{field.name}: {field.dataType}")
 
 print("Befor dropna : ",df.count())
 df = df.dropna()
@@ -68,10 +68,6 @@ for col in numeric_cols:
 
 print(f"After remove outlier rows : {df.count()}")
 
-print("Schema:")
-for field in df.schema.fields:
-    print(f"{field.name}: {field.dataType}")
-print("TYPE:", type(vec_to_arr))
 
 assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features_vec")
 df = assembler.transform(df)
@@ -79,11 +75,12 @@ df = assembler.transform(df)
 scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
 df = scaler.fit(df).transform(df)
 
-df = df.withColumn("features_array", vec_to_arr(col("scaled_features")))
+
+df = df.withColumn("features_array", vector_to_array(col_funs("scaled_features")))
 
 num_features = len(numeric_cols)
 for i in range(num_features):
-    df = df.withColumn(f"feature_{i+1}", col("features_array")[i])
+    df = df.withColumn(f"feature_{i+1}", col_funs("features_array")[i])
 
 print(df.select([f"feature_{i+1}" for i in range(num_features)]).show(5))
 
