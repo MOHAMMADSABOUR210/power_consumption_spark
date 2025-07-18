@@ -1,10 +1,10 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf
+from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf, when
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
-from pyspark.ml.linalg import Vectors, DenseVector
 from pyspark.sql.types import FloatType
+
 
 
 
@@ -17,7 +17,7 @@ for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-print("100 sample with 10 columns: ")
+print("50 sample with 10 columns: ")
 timestamp_col = "datetime"
 
 other_columns = [col for col in df.columns if col != timestamp_col]
@@ -25,9 +25,9 @@ selected_columns = random.sample(other_columns, 10)
 
 selected_columns = [timestamp_col] + selected_columns
 
-sampled_rows = df.select(selected_columns).sample(withReplacement=False, fraction=0.1, seed=42).limit(100)
+sampled_rows = df.select(selected_columns).sample(withReplacement=False, fraction=0.1, seed=42).limit(50)
 
-print(sampled_rows.show(100))
+print(sampled_rows.show(50))
 
 df = df.withColumn("hour", hour("datetime"))
 df = df.withColumn("day_of_week", dayofweek("datetime"))
@@ -57,9 +57,7 @@ def drop_highly_correlated_columns(df, threshold=0.95):
 
 
 print("Before dropping highly correlated columns: ", len(df.columns))
-
 df = drop_highly_correlated_columns(df, threshold=0.9)
-
 print("Columns after dropping highly correlated ones: ", len(df.columns))
 
 
@@ -109,3 +107,15 @@ min_udf = udf(lambda vec: float(min(vec)), FloatType())
 max_udf = udf(lambda vec: float(max(vec)), FloatType())
 
 df.select(min_udf("scaled_features").alias("min_val"), max_udf("scaled_features").alias("max_val")).show()
+
+
+
+
+print(df.select("hour").show(10))  
+df = df.withColumn("day_period", 
+                   when(df["hour"] < 6, "night")
+                   .when(df["hour"] < 12, "morning")
+                   .when(df["hour"] < 18, "afternoon")
+                   .otherwise("evening"))
+print(df.select("day_period").show(10))
+
