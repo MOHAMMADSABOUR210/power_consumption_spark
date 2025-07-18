@@ -11,7 +11,10 @@ spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
 
 
-df = spark.read.csv(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\power.csv", header=True, inferSchema=True)
+df1 = spark.read.csv("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_A.csv", header=True, inferSchema=True)
+df2 = spark.read.csv("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\db_building_B.csv", header=True, inferSchema=True)
+
+df = df1.unionByName(df2)
 
 print("Schema:")
 for field in df.schema.fields:
@@ -19,7 +22,7 @@ for field in df.schema.fields:
 
 
 print("50 sample with 10 columns: ")
-timestamp_col = "datetime"
+timestamp_col = "DATE"
 
 other_columns = [col for col in df.columns if col != timestamp_col]
 selected_columns = random.sample(other_columns, 10)
@@ -30,9 +33,9 @@ sampled_rows = df.select(selected_columns).sample(withReplacement=False, fractio
 
 print(sampled_rows.show(50))
 
-df = df.withColumn("hour", hour("datetime"))
-df = df.withColumn("day_of_week", dayofweek("datetime"))
-df = df.withColumn("month", month("datetime"))
+df = df.withColumn("hour", hour("DATE"))
+df = df.withColumn("day_of_week", dayofweek("DATE"))
+df = df.withColumn("month", month("DATE"))
 
 print("Befor dropna : ",df.count())
 df = df.dropna()
@@ -67,7 +70,7 @@ df = df.dropDuplicates()
 print("After dropping duplicates: ", df.count())
 
 
-time_col = "datetime"
+time_col = "DATE"
 
 cols = df.columns
 numeric_cols = [c for c in cols if c != time_col]
@@ -109,11 +112,7 @@ num_features = len(numeric_cols)
 for i in range(num_features):
     df = df.withColumn(f"feature_{i+1}", col("features_array")[i])
 
-min_udf = udf(lambda vec: float(min(vec)), FloatType())
-max_udf = udf(lambda vec: float(max(vec)), FloatType())
-
-df.select(min_udf("scaled_features").alias("min_val"), max_udf("scaled_features").alias("max_val")).show()
-
+print(df.select([f"feature_{i+1}" for i in range(num_features)]).show(5))
 
 
 
@@ -126,3 +125,6 @@ df = df.withColumn("day_period",
 print(df.select("day_period").show(10))
 
 
+final_cols = [f"feature_{i+1}" for i in range(num_features)]
+df.select(final_cols).write.option("header", True).mode("overwrite").csv(
+    r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\processed_csv")
