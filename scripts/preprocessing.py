@@ -13,8 +13,18 @@ for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-print(df.select(df.columns[:20]).show(100))
+import random
 
+timestamp_col = "datetime"
+
+other_columns = [col for col in df.columns if col != timestamp_col]
+selected_columns = random.sample(other_columns, 20)
+
+selected_columns = [timestamp_col] + selected_columns
+
+sampled_rows = df.select(selected_columns).sample(withReplacement=False, fraction=0.1, seed=42).limit(100)
+
+print(sampled_rows.show(100))
 
 df = df.withColumn("hour", hour("datetime"))
 df = df.withColumn("day_of_week", dayofweek("datetime"))
