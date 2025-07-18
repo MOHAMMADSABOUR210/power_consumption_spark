@@ -1,8 +1,8 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean
 from pyspark.ml.stat import Correlation
-from pyspark.ml.feature import VectorAssembler 
-import numpy as np
+from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
+
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
@@ -13,7 +13,7 @@ for field in df.schema.fields:
     print(f"{field.name}: {field.dataType}")
 
 
-print(df.select(df.columns[:10]).show(5))
+print(df.select(df.columns[:20]).show(100))
 
 
 df = df.withColumn("hour", hour("datetime"))
@@ -82,3 +82,10 @@ for col in numeric_cols:
         df = df.filter((df[col] >= mean_val - 3 * std_val) & (df[col] <= mean_val + 3 * std_val))
 
 print(f"After remove outlier rows : {df.count()}")
+
+
+assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features_vec")
+df = assembler.transform(df)
+
+scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
+df = scaler.fit(df).transform(df)
