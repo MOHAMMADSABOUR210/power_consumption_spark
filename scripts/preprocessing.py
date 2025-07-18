@@ -3,9 +3,8 @@ from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean ,udf, when
 from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
-from pyspark.sql.types import FloatType
-from pyspark.ml.functions import vector_to_array
 from pyspark.sql.functions import col
+from pyspark.ml.functions import vector_to_array as vec_to_arr
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
@@ -48,29 +47,6 @@ df = df.dropna()
 print("after dropna : ",df.count())
 
 
-def drop_highly_correlated_columns(df, threshold=0.95):
-
-    cols = [col for col, dtype in df.dtypes if dtype in ('double', 'int', 'float', 'long')]
-    
-    assembler = VectorAssembler(inputCols=cols, outputCol="features")
-    vector_df = assembler.transform(df).select("features")
-
-    corr_matrix = Correlation.corr(vector_df, "features").head()[0].toArray()
-
-    to_drop = set()
-    for i in range(len(cols)):
-        for j in range(i + 1, len(cols)):
-            if abs(corr_matrix[i][j]) >= threshold and cols[j] not in to_drop:
-                to_drop.add(cols[j])
-
-    return df.drop(*to_drop)
-
-
-print("Before dropping highly correlated columns: ", len(df.columns))
-df = drop_highly_correlated_columns(df, threshold=0.9)
-print("Columns after dropping highly correlated ones: ", len(df.columns))
-
-
 print("Before dropping duplicates: ", df.count())
 df = df.dropDuplicates()
 print("After dropping duplicates: ", df.count())
@@ -80,19 +56,6 @@ time_col = "DATE"
 
 cols = df.columns
 numeric_cols = [c for c in cols if c != time_col]
-
-
-print("Before dropping constant columns: ", len(df.columns))
-
-for col in numeric_cols:
-    
-    std = df.select(stddev(col)).first()[0]
-    if std == 0 or std is None:
-        df = df.drop(col)
-
-print("After dropping constant columns: ", len(df.columns))
-print(df.columns)
-
 
 
 print(f"Befor remove outlier rows : {df.count()}")
@@ -105,6 +68,10 @@ for col in numeric_cols:
 
 print(f"After remove outlier rows : {df.count()}")
 
+print("Schema:")
+for field in df.schema.fields:
+    print(f"{field.name}: {field.dataType}")
+print("TYPE:", type(vec_to_arr))
 
 assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features_vec")
 df = assembler.transform(df)
@@ -112,7 +79,7 @@ df = assembler.transform(df)
 scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
 df = scaler.fit(df).transform(df)
 
-df = df.withColumn("features_array", vector_to_array(col("scaled_features")))
+df = df.withColumn("features_array", vec_to_arr(col("scaled_features")))
 
 num_features = len(numeric_cols)
 for i in range(num_features):
