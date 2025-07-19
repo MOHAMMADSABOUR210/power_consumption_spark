@@ -1,13 +1,12 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean , when,to_timestamp
-from pyspark.ml.stat import Correlation
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
 from pyspark.sql.functions import col as col_funs
-import importlib
-import pyspark.ml.functions
-importlib.reload(pyspark.ml.functions)
 from pyspark.ml.functions import vector_to_array
+import shutil
+import os
+
 
 spark = SparkSession.builder.appName("ElectricityPreprocessing").getOrCreate()
 
@@ -33,7 +32,7 @@ selected_columns = [timestamp_col] + selected_columns
 
 sampled_rows = df.select(selected_columns).sample(withReplacement=False, fraction=0.1, seed=42).limit(50)
 
-print(sampled_rows.show(50))
+print(df.show(50))
 
 df = df.withColumn("DATE", to_timestamp("DATE", "M/d/yyyy H:mm"))
 
@@ -95,6 +94,11 @@ df = df.withColumn("day_period",
 print(df.select("day_period").show(10))
 
 
-final_cols = [f"feature_{i+1}" for i in range(num_features)]
-df.select(final_cols).write.option("header", True).mode("overwrite").csv(
-    r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\processed_csv")
+final_cols = [f"feature_{i+1}" for i in range(num_features)] + [
+    "hour", "day_period", "DATE", "ENERGY","HOLIDAY"
+]
+
+output_path = "Data/processed_csv"
+if os.path.exists(output_path):
+    shutil.rmtree(output_path)
+df.select(final_cols).write.option("header", True).mode("overwrite").csv(output_path)
