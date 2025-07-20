@@ -35,3 +35,13 @@ test_predictions = lr_model.transform(test_data)
 evaluator = RegressionEvaluator(labelCol="ENERGY", predictionCol="prediction", metricName="rmse")
 rmse_test = evaluator.evaluate(test_predictions)
 print(f"Test RMSE = {rmse_test}")
+
+
+evaluator_mae = RegressionEvaluator(labelCol="ENERGY", predictionCol="prediction", metricName="mae")
+mae = evaluator_mae.evaluate(test_predictions)
+print(f"Test MAE = {mae}")
+
+
+evaluator_r2 = RegressionEvaluator(labelCol="ENERGY", predictionCol="prediction", metricName="r2")
+r2 = evaluator_r2.evaluate(test_predictions)
+print(f"Test R2 = {r2}")
