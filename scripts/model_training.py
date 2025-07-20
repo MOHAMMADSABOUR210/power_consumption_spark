@@ -45,3 +45,6 @@ print(f"Test MAE = {mae}")
 evaluator_r2 = RegressionEvaluator(labelCol="ENERGY", predictionCol="prediction", metricName="r2")
 r2 = evaluator_r2.evaluate(test_predictions)
 print(f"Test R2 = {r2}")
+
+
+lr_model.save("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models")
