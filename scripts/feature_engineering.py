@@ -26,7 +26,15 @@ print(df.select("day_period").show(10))
 
 day_period_indexer = StringIndexer(inputCol="day_period", outputCol="day_period_index")
 df = day_period_indexer.fit(df).transform(df)
+df = df.drop("day_period")
 
+df = df.withColumn(
+    "season",
+    when((col("month") >= 3) & (col("month") <= 5), 1)
+    .when((col("month") >= 6) & (col("month") <= 8), 2)
+    .when((col("month") >= 9) & (col("month") <= 11), 3)
+    .otherwise(4)
+)
 
 timestamp_col = "DATE"
 
@@ -41,3 +49,6 @@ print(df.show(30))
 
 df.write.mode("overwrite").parquet("Data/featured_data")
 
+print("Schema:")
+for field in df.schema.fields:
+    print(f"{field.name}: {field.dataType}")
