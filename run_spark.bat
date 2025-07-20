@@ -12,9 +12,9 @@ set HADOOP_HOME=C:\hadoop\hadoop-3.3.6
 set PATH=%HADOOP_HOME%\bin;%PATH%
 
 REM Run your PySpark script
-%PYSPARK_PYTHON% scripts/preprocessing.py
+@REM %PYSPARK_PYTHON% scripts/preprocessing.py
 @REM %PYSPARK_PYTHON% scripts/feature_engineering.py
-@REM %PYSPARK_PYTHON% scripts/model_training.py
+%PYSPARK_PYTHON% scripts/model_training.py
 
 
 

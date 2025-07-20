@@ -7,15 +7,10 @@ import datetime
 spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
 
 
-data = spark.read.parquet(r"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Data\featured_data")
+data = spark.read.parquet(r"Data\featured_data")
 
 
-
-feature_cols = ['feature_1', 'feature_2', 'feature_3', 'feature_4', 'feature_5',
-                'feature_6', 'feature_7', 'feature_8', 'feature_9', 'feature_10',
-                'feature_11', 'feature_12', 'feature_13', 'feature_14', 'hour', 
-                'HOLIDAY', 'month', 'day_of_week', 
-                'is_weekend', 'day_period_index','ENERGY']
+feature_cols = ['scaled_features','ENERGY']
 assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
 data = assembler.transform(data)
 
