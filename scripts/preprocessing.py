@@ -79,13 +79,6 @@ df = df.withColumn("features_array", vector_to_array(col_funs("scaled_features")
 
 num_features = len(numeric_cols)
 
-print(df.select("hour").show(10))  
-df = df.withColumn("day_period", 
-                   when(df["hour"] < 6, "night")
-                   .when(df["hour"] < 12, "morning")
-                   .when(df["hour"] < 18, "afternoon")
-                   .otherwise("evening"))
-print(df.select("day_period").show(10))
 
 
 final_cols = df.columns
@@ -94,4 +87,4 @@ print(final_cols)
 output_path = "Data/processed"
 if os.path.exists(output_path):
     shutil.rmtree(output_path)
-df.write.mode("overwrite").parquet("output_path")
+df.write.mode("overwrite").parquet(output_path)
