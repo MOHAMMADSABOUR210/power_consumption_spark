@@ -13,6 +13,9 @@ set PATH=%HADOOP_HOME%\bin;%PATH%
 
 REM Run your PySpark script
 @REM %PYSPARK_PYTHON% scripts/preprocessing.py
-%PYSPARK_PYTHON% scripts/feature_engineering.py
+@REM %PYSPARK_PYTHON% scripts/feature_engineering.py
+%PYSPARK_PYTHON% scripts/model_training.py
+
+
 
 pause

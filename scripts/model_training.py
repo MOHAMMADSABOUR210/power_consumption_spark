@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
+import datetime
 
 spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
 
@@ -47,4 +48,6 @@ r2 = evaluator_r2.evaluate(test_predictions)
 print(f"Test R2 = {r2}")
 
 
-lr_model.save("D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models")
+now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Model_Spark_{now}"
+lr_model.save(model_path)
