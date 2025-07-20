@@ -51,10 +51,10 @@ df = df.dropDuplicates()
 print("After dropping duplicates: ", df.count())
 
 
-time_col = "DATE"
+time_col = ["DATE","HOLIDAY"]
 
 cols = df.columns
-numeric_cols = [c for c in cols if c != time_col]
+numeric_cols = [c for c in cols if c not in time_col]
 
 
 print(f"Befor remove outlier rows : {df.count()}")
@@ -78,12 +78,6 @@ df = scaler.fit(df).transform(df)
 df = df.withColumn("features_array", vector_to_array(col_funs("scaled_features")))
 
 num_features = len(numeric_cols)
-for i in range(num_features):
-    df = df.withColumn(f"feature_{i+1}", col_funs("features_array")[i])
-
-print(df.select([f"feature_{i+1}" for i in range(num_features)]).show(5))
-
-
 
 print(df.select("hour").show(10))  
 df = df.withColumn("day_period", 
@@ -94,11 +88,10 @@ df = df.withColumn("day_period",
 print(df.select("day_period").show(10))
 
 
-final_cols = [f"feature_{i+1}" for i in range(num_features)] + [
-    "hour", "day_period", "DATE", "ENERGY","HOLIDAY"
-]
+final_cols = df.columns
+print(final_cols)
 
-output_path = "Data/processed_csv"
+output_path = "Data/processed"
 if os.path.exists(output_path):
     shutil.rmtree(output_path)
-df.select(final_cols).write.option("header", True).mode("overwrite").csv(output_path)
+df.write.mode("overwrite").parquet("output_path")
