@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, dayofweek, month, to_date, when
+from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour
 from pyspark.ml.feature import StringIndexer
 import random
 
@@ -7,16 +7,16 @@ spark = SparkSession.builder.getOrCreate()
 
 df = spark.read.parquet("Data/processed", header=True, inferSchema=True)
 
-df = df.withColumn("DATE", to_date(col("DATE"), "yyyy-MM-dd"))
 
-df = df.withColumn("month", month(col("DATE")))
-df = df.withColumn("day_of_week", dayofweek(col("DATE")))  
+df = df.withColumn("hour", hour("DATE"))
+df = df.withColumn("day_of_week", dayofweek("DATE"))
+df = df.withColumn("month", month("DATE"))
+
+
+df = df.withColumn("DATE", to_date(col("DATE"), "yyyy-MM-dd"))
 
 df = df.withColumn("is_weekend", when(col("day_of_week").isin([1, 7]), 1).otherwise(0))
 
-df = df.withColumn("HOLIDAY", when(col("HOLIDAY") == True, 1).otherwise(0))
-
-print(df.select("hour").show(10))  
 df = df.withColumn("day_period", 
                    when(df["hour"] < 6, "night")
                    .when(df["hour"] < 12, "morning")
@@ -37,7 +37,7 @@ selected_columns = [timestamp_col] + selected_columns
 
 sampled_rows = df.select(selected_columns).sample(withReplacement=False, fraction=0.1, seed=42).limit(50)
 
-print(sampled_rows.show(30))
+print(df.show(30))
 
 df.write.mode("overwrite").parquet("Data/featured_data")
 

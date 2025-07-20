@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import  hour, dayofweek, month,stddev,mean , when,to_timestamp
+from pyspark.sql.functions import  stddev,mean ,to_timestamp
 from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
 from pyspark.sql.functions import col as col_funs
@@ -35,11 +35,6 @@ sampled_rows = df.select(selected_columns).sample(withReplacement=False, fractio
 print(df.show(50))
 
 df = df.withColumn("DATE", to_timestamp("DATE", "M/d/yyyy H:mm"))
-
-df = df.withColumn("hour", hour("DATE"))
-df = df.withColumn("day_of_week", dayofweek("DATE"))
-df = df.withColumn("month", month("DATE"))
-
 
 print("Befor dropna : ",df.count())
 df = df.dropna()
