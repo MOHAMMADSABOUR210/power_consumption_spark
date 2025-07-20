@@ -19,29 +19,19 @@ assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
 data = assembler.transform(data)
 
 
-train_df, val_df, test_df = data.randomSplit([0.7, 0.15, 0.15], seed=42)
+train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
 
 train_data = train_df.select("features", "ENERGY")
-val_data = val_df.select("features", "ENERGY")
 test_data = test_df.select("features", "ENERGY")
 
 print("Train count:", train_df.count())
-print("Validation count:", val_df.count())
 print("Test count:", test_df.count())
 
 lr = LinearRegression(featuresCol="features", labelCol="ENERGY")
 lr_model = lr.fit(train_data)
 
-val_predictions = lr_model.transform(val_data)
-
-evaluator = RegressionEvaluator(labelCol="electricity_usage", predictionCol="prediction", metricName="rmse")
-rmse = evaluator.evaluate(val_predictions)
-
-print(f"Validation RMSE: {rmse}")
-
-
 test_predictions = lr_model.transform(test_data)
 
-evaluator = RegressionEvaluator(labelCol="ENRGY", predictionCol="prediction", metricName="rmse")
+evaluator = RegressionEvaluator(labelCol="ENERGY", predictionCol="prediction", metricName="rmse")
 rmse_test = evaluator.evaluate(test_predictions)
 print(f"Test RMSE = {rmse_test}")
