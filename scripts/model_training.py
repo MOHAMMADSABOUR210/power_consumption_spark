@@ -3,7 +3,7 @@ from pyspark.ml.feature import VectorAssembler,StringIndexer
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
 import datetime
-from pyspark.sql.functions import col, avg
+from pyspark.sql.functions import  avg
 from pyspark.ml import Pipeline
 
 spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
@@ -12,18 +12,16 @@ spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
 data = spark.read.parquet(r"Data\featured_data")
 
 
-feature_cols = ['scaled_features','ENERGY']
+feature_cols = ['scaled_features']
 assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
 data = assembler.transform(data)
 
 
-train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
+train_data, test_data = data.randomSplit([0.8, 0.2], seed=42)
 
-train_data = train_df.select("features", "ENERGY")
-test_data = test_df.select("features", "ENERGY")
 
-print("Train count:", train_df.count())
-print("Test count:", test_df.count())
+print("Train count:", train_data.count())
+print("Test count:", test_data.count())
 
 lr = LinearRegression(featuresCol="features", labelCol="ENERGY")
 lr_model = lr.fit(train_data)
@@ -50,6 +48,7 @@ now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Model_Spark_{now}"
 lr_model.save(model_path)
 
+#################################################prediction season ##############################################
 season_indexer = StringIndexer(inputCol="season", outputCol="season_index")
 
 assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
