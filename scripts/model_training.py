@@ -49,18 +49,6 @@ now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Model_Spark_{now}"
 lr_model.save(model_path)
 
-season_indexer = StringIndexer(inputCol="season", outputCol="season_index")
+seasonal_energy = test_predictions.groupBy("season").agg(avg("prediction").alias("avg_energy_prediction"))
 
-assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
-
-lr = LinearRegression(featuresCol="final_features", labelCol="ENERGY")
-
-pipeline = Pipeline(stages=[season_indexer, assembler, lr])
-
-train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
-
-model = pipeline.fit(train_df)
-
-predictions = model.transform(test_df)
-
-print(predictions.select("ENERGY", "prediction").show(10))
+print(seasonal_energy.show())
