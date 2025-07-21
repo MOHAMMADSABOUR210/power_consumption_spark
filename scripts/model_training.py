@@ -45,7 +45,7 @@ print(f"Test R2 = {r2}")
 print(test_predictions.select("ENERGY", "prediction").show(10))
 
 now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Model_Spark_{now}"
+model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_{now}"
 lr_model.save(model_path)
 
 #################################################prediction season ##############################################
@@ -73,3 +73,7 @@ evaluator = RegressionEvaluator(
 
 rmse = evaluator.evaluate(predictions)
 print(f"Root Mean Squared Error (RMSE): {rmse}")
+
+now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_{now}"
+model.save(model_path)
