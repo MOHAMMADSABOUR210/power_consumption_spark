@@ -3,6 +3,7 @@ from pyspark.ml.feature import VectorAssembler,StringIndexer
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
 import datetime
+from pyspark.sql.functions import col, avg
 from pyspark.ml import Pipeline
 
 spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
@@ -49,6 +50,27 @@ now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Model_Spark_{now}"
 lr_model.save(model_path)
 
-seasonal_energy = test_predictions.groupBy("season").agg(avg("prediction").alias("avg_energy_prediction"))
+season_indexer = StringIndexer(inputCol="season", outputCol="season_index")
+
+assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
+
+lr = LinearRegression(featuresCol="final_features", labelCol="ENERGY")
+
+pipeline = Pipeline(stages=[season_indexer, assembler, lr])
+
+train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
+
+model = pipeline.fit(train_df)
+
+predictions = model.transform(test_df)
+
+seasonal_energy = predictions.groupBy("season").agg(avg("prediction").alias("avg_energy_prediction"))
 
 print(seasonal_energy.show())
+
+evaluator = RegressionEvaluator(
+    labelCol="ENERGY", predictionCol="prediction", metricName="rmse"
+)
+
+rmse = evaluator.evaluate(predictions)
+print(f"Root Mean Squared Error (RMSE): {rmse}")
