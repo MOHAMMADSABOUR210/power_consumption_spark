@@ -1,10 +1,8 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour,year
+from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour,year,lag,avg, stddev
 from pyspark.ml.feature import StringIndexer
 import random
 from pyspark.sql.window import Window
-from pyspark.sql.functions import lag
-
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -60,9 +58,16 @@ windowSpec = Window.orderBy("DATE")
 df = df.withColumn("ENERGY_lag1", lag("ENERGY", 1).over(windowSpec))
 
 df = df.withColumn("ENERGY_lag2", lag("ENERGY", 2).over(windowSpec))
-df = df.na.drop(subset=["ENERGY_lag1", "ENERGY_lag2"])
 
 df.write.mode("overwrite").parquet("Data/featured_data")
+
+windowSpec = Window.orderBy("DATE").rowsBetween(-2, 0)
+
+df = df.withColumn("energy_ma_3", avg("ENERGY").over(windowSpec))
+df = df.withColumn("energy_std_3", stddev("ENERGY").over(windowSpec))
+
+df = df.na.drop(subset=["ENERGY_lag1", "ENERGY_lag2","energy_ma_3","energy_std_3"])
+
 
 print("Schema:")
 for field in df.schema.fields:
