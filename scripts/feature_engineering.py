@@ -30,10 +30,10 @@ df = df.drop("day_period")
 
 df = df.withColumn(
     "season",
-    when((col("month") >= 3) & (col("month") <= 5), 1)
-    .when((col("month") >= 6) & (col("month") <= 8), 2)
-    .when((col("month") >= 9) & (col("month") <= 11), 3)
-    .otherwise(4)
+    when((col("month") >= 3) & (col("month") <= 5), "Spring")
+    .when((col("month") >= 6) & (col("month") <= 8), "Summer")
+    .when((col("month") >= 9) & (col("month") <= 11), "fall")
+    .otherwise("Winter")
 )
 
 timestamp_col = "DATE"
