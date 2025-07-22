@@ -2,6 +2,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour,year
 from pyspark.ml.feature import StringIndexer
 import random
+from pyspark.sql.window import Window
+from pyspark.sql.functions import lag
+
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -51,6 +54,13 @@ print(df.show(30))
 df = df.withColumn("temp_diff", col("T2M_MAX") - col("T2M_MIN"))
 df = df.withColumn("temp_avg", (col("T2M_MAX") + col("T2M_MIN")) / 2)
 
+
+windowSpec = Window.orderBy("DATE")
+
+df = df.withColumn("ENERGY_lag1", lag("ENERGY", 1).over(windowSpec))
+
+df = df.withColumn("ENERGY_lag2", lag("ENERGY", 2).over(windowSpec))
+df = df.na.drop(subset=["ENERGY_lag1", "ENERGY_lag2"])
 
 df.write.mode("overwrite").parquet("Data/featured_data")
 
