@@ -59,7 +59,6 @@ df = df.withColumn("ENERGY_lag1", lag("ENERGY", 1).over(windowSpec))
 
 df = df.withColumn("ENERGY_lag2", lag("ENERGY", 2).over(windowSpec))
 
-df.write.mode("overwrite").parquet("Data/featured_data")
 
 windowSpec = Window.orderBy("DATE").rowsBetween(-2, 0)
 
@@ -67,6 +66,8 @@ df = df.withColumn("energy_ma_3", avg("ENERGY").over(windowSpec))
 df = df.withColumn("energy_std_3", stddev("ENERGY").over(windowSpec))
 
 df = df.na.drop(subset=["ENERGY_lag1", "ENERGY_lag2","energy_ma_3","energy_std_3"])
+
+df.write.mode("overwrite").parquet("Data/featured_data")
 
 
 print("Schema:")
