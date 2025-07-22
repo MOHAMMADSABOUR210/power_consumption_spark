@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.ml.feature import VectorAssembler,StringIndexer
+from pyspark.ml.feature import VectorAssembler,StringIndexer,MinMaxScaler
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
 import datetime
@@ -49,13 +49,16 @@ model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consu
 lr_model.save(model_path)
 
 #################################################prediction season ##############################################
+
+numeric_cols = ['HDD18_3', 'CDD0', 'CDD10', 'PRECTOT', 'RH2M', 'T2M', 'T2M_MIN', 'T2M_MAX', 'ALLSKY']
+
+assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features_vec")
+scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
 season_indexer = StringIndexer(inputCol="season", outputCol="season_index")
-
-assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
-
+final_assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
 lr = LinearRegression(featuresCol="final_features", labelCol="ENERGY")
 
-pipeline = Pipeline(stages=[season_indexer, assembler, lr])
+pipeline = Pipeline(stages=[assembler, scaler, season_indexer, final_assembler, lr])
 
 train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
 

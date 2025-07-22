@@ -1,9 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import  stddev,mean ,to_timestamp
-from pyspark.ml.feature import MinMaxScaler,VectorAssembler 
 import random
-from pyspark.sql.functions import col as col_funs
-from pyspark.ml.functions import vector_to_array
 import shutil
 import os
 
@@ -61,19 +58,6 @@ for col in numeric_cols:
         df = df.filter((df[col] >= mean_val - 3 * std_val) & (df[col] <= mean_val + 3 * std_val))
 
 print(f"After remove outlier rows : {df.count()}")
-
-
-assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features_vec")
-df = assembler.transform(df)
-
-scaler = MinMaxScaler(inputCol="features_vec", outputCol="scaled_features")
-df = scaler.fit(df).transform(df)
-
-
-df = df.withColumn("features_array", vector_to_array(col_funs("scaled_features")))
-
-num_features = len(numeric_cols)
-
 
 
 final_cols = df.columns
