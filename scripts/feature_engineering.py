@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour
+from pyspark.sql.functions import col, dayofweek, month, to_date, when,hour,year
 from pyspark.ml.feature import StringIndexer
 import random
 
@@ -11,6 +11,7 @@ df = spark.read.parquet("Data/processed", header=True, inferSchema=True)
 df = df.withColumn("hour", hour("DATE"))
 df = df.withColumn("day_of_week", dayofweek("DATE"))
 df = df.withColumn("month", month("DATE"))
+df = df.withColumn("year", year("DATE"))
 
 
 df = df.withColumn("DATE", to_date(col("DATE"), "yyyy-MM-dd"))
