@@ -5,6 +5,9 @@ from pyspark.ml.evaluation import RegressionEvaluator
 import datetime
 from pyspark.sql.functions import  avg
 from pyspark.ml import Pipeline
+import os
+import shutil
+
 
 spark = SparkSession.builder.appName("PowerPredictionModel").getOrCreate()
 
@@ -49,8 +52,9 @@ print(f"Test R2 = {r2}")
 
 print(test_predictions.select("ENERGY", "prediction").show(10))
 
-now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_{now}"
+model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_v1"
+if os.path.exists(model_path):
+    shutil.rmtree(model_path)
 lr_model.save(model_path)
 
 #################################################prediction season ##############################################
@@ -79,8 +83,9 @@ evaluator = RegressionEvaluator(
 rmse = evaluator.evaluate(predictions)
 print(f"Root Mean Squared Error (RMSE): {rmse}")
 
-now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_{now}"
+model_path = fr"D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_v2"
+if os.path.exists(model_path):
+    shutil.rmtree(model_path)
 model.save(model_path)
 
 ######################################Predicte New Rows###########################################
