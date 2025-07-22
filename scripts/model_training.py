@@ -68,9 +68,9 @@ model.save(model_path)
 
 season_indexer = StringIndexer(inputCol="season", outputCol="season_index")
 final_assembler = VectorAssembler(inputCols=["scaled_features", "season_index"], outputCol="final_features")
-rf = RandomForestRegressor(featuresCol="final_features", labelCol="ENERGY", numTrees=100)
+gbt = GBTRegressor(featuresCol="final_features", labelCol="ENERGY", maxIter=100, maxDepth=5)
 
-pipeline = Pipeline(stages=[assembler, scaler, season_indexer, final_assembler, rf])
+pipeline = Pipeline(stages=[assembler, scaler, season_indexer, final_assembler, gbt])
 
 train_df, test_df = data.randomSplit([0.8, 0.2], seed=42)
 
@@ -78,8 +78,10 @@ model = pipeline.fit(train_df)
 
 predictions = model.transform(test_df)
 
-seasonal_energy = predictions.groupBy("season").agg(avg("prediction").alias("avg_energy_prediction"))
-
+seasonal_energy = predictions.groupBy("season").agg(
+    avg("ENERGY").alias("avg_energy_actual"),
+    avg("prediction").alias("avg_energy_prediction")
+)
 print(seasonal_energy.show())
 
 evaluator = RegressionEvaluator(
