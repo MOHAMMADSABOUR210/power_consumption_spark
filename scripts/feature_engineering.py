@@ -47,6 +47,10 @@ sampled_rows = df.select(selected_columns).sample(withReplacement=False, fractio
 
 print(df.show(30))
 
+df = df.withColumn("temp_diff", col("T2M_MAX") - col("T2M_MIN"))
+df = df.withColumn("temp_avg", (col("T2M_MAX") + col("T2M_MIN")) / 2)
+
+
 df.write.mode("overwrite").parquet("Data/featured_data")
 
 print("Schema:")
