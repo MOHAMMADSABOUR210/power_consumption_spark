@@ -1,11 +1,8 @@
 from pyspark.sql import SparkSession
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.regression import GBTRegressionModel
 from pyspark.ml import PipelineModel
 import random
 from pyspark.sql.functions import col, udf
 from pyspark.sql.types import DoubleType
-
 spark = SparkSession.builder.appName("GBTModelPrediction").getOrCreate()
 
 model_path = "D:\Programming\Data_Engineering\Apache_Spark\project\power_consumption_spark\Models\Model_Spark_v1"
@@ -39,18 +36,15 @@ add_noise_udf = udf(lambda x: add_noise(x, intensity=0.05), DoubleType())
 
 df_sample = df_sample.select(numeric_cols)
 
-
 for col_name in numeric_cols:
     df_sample = df_sample.withColumn(col_name, add_noise_udf(col(col_name)))
 
 print(df_sample.show(10))
 
-# df_new = spark.createDataFrame(new_data, numeric_cols)
 
-# assembler = VectorAssembler(inputCols=numeric_cols, outputCol="features")
-# df_new_vec = assembler.transform(df_new)
+predictions = model.transform(df_sample)
 
-# predictions = model.transform(df_new_vec)
+print(predictions.select("prediction").show(truncate=False))
 
 
-# predictions.select(*numeric_cols, "prediction").show()
+

@@ -96,27 +96,4 @@ if os.path.exists(model_path):
     shutil.rmtree(model_path)
 model.save(model_path)
 
-######################################Predicte New Rows###########################################
 
-# from pyspark.sql import Row
-
-# new_data = [
-#     Row(
-#         HDD18_3=0.0,
-#         CDD0=15.0,
-#         CDD10=8.0,
-#         PRECTOT=0.7,
-#         RH2M=40.0,
-#         T2M=31.0,
-#         T2M_MIN=25.0,
-#         T2M_MAX=37.0,
-#         ALLSKY=0.25,
-#         season="summer"
-#     )
-# ]
-
-# new_df = spark.createDataFrame(new_data)
-
-# prediction_new = model.transform(new_df)
-
-# prediction_new.select("season", "prediction").show()
