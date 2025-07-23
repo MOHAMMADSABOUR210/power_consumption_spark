@@ -37,6 +37,9 @@ def add_noise(value, intensity=0.10):
 
 add_noise_udf = udf(lambda x: add_noise(x, intensity=0.05), DoubleType())
 
+df_sample = df_sample.select(numeric_cols)
+
+
 for col_name in numeric_cols:
     df_sample = df_sample.withColumn(col_name, add_noise_udf(col(col_name)))
 
