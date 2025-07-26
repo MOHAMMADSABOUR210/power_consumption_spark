@@ -18,12 +18,8 @@ data = spark.read.parquet(r"Data\featured_data")
 print(data.columns)
 
 numeric_cols = [
-    'HDD18_3', 'CDD0', 'CDD10', 'PRECTOT', 'RH2M',
-    'T2M', 'T2M_MIN', 'T2M_MAX', 'ALLSKY',
-    'day_of_week', 'month', 'year',
-    'temp_diff', 'temp_avg', 'HOLIDAY',
-    'ENERGY_lag1', 'ENERGY_lag2' ,
-    'energy_ma_3', 'energy_std_3'
+    'energy_ma_3', 'ENERGY_lag1', 'ENERGY_lag2',
+    'energy_std_3', 'HOLIDAY', 'HDD18_3','temp_avg'
 ]
 
 print(data.select(numeric_cols).describe().show())
