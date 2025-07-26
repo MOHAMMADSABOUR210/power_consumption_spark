@@ -20,9 +20,18 @@ numeric_cols = [
 data = spark.read.parquet(r"Data\featured_data")
 
 
-
 def data_sample(data, numeric_cols):
     df_sample = data.sample(withReplacement=False, fraction=0.05, seed=42)
+
+    if "season" in numeric_cols:
+        extra_seasons = ["spring", "summer", "fall", "winter"]
+        extra_df = data.sparkSession.createDataFrame([(s,) for s in extra_seasons], ["season"])
+        
+        other_cols = [c for c in df_sample.columns if c != "season"]
+        for c in other_cols:
+            extra_df = extra_df.withColumn(c, lit(None))
+        
+        df_sample = df_sample.unionByName(extra_df.select(df_sample.columns))
 
     def add_noise(value, intensity=0.10):
         try:
@@ -32,15 +41,20 @@ def data_sample(data, numeric_cols):
             noise = random.gauss(0, abs(val) * intensity)
             return round(val + noise, 2)
         except:
-            return value  
+            return None
 
     add_noise_udf = udf(add_noise, DoubleType())
 
-    for col_name in numeric_cols:
+    numeric_cols_filtered = [f.name for f in data.schema.fields if f.name in numeric_cols and isinstance(f.dataType, DoubleType)]
+
+    for col_name in numeric_cols_filtered:
         df_sample = df_sample.withColumn(col_name, add_noise_udf(col(col_name)))
 
-    df_sample.show(10)
+    df_sample = df_sample.select(numeric_cols)
+    print("-"*50)
+    print(df_sample.show(10))
     return df_sample
+
 ##################################### model v1 #################################
 
 df_sample = data_sample(data,numeric_cols)
@@ -65,19 +79,11 @@ df_sample = data_sample(data,numeric_cols)
 
 print(df_sample.columns)
 
-df_sample = df_sample.withColumn("season", col("season").cast("string"))
-df_sample = df_sample.withColumn("season", when(col("season").isNull(), lit("unknown")).otherwise(col("season")))
-allowed_seasons = ["spring", "summer", "fall", "winter"]
-df_sample = df_sample.withColumn(
-    "season",
-    when(col("season").isin(allowed_seasons), col("season")).otherwise(lit("spring"))
-)
-
-
 for stage in model.stages:
     if stage.__class__.__name__ == "StringIndexerModel":
         print(f"StringIndexer input col: {stage.getInputCol()}")
-
+print("*"*50)
+print(df_sample.show(12))
 predictions = model.transform(df_sample)
 
 print(predictions.select("prediction").show(truncate=False))
