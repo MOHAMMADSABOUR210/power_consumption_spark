@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.ml import PipelineModel
 import random
-from pyspark.sql.functions import col, udf
+from pyspark.sql.functions import col, udf,when, lit
 from pyspark.sql.types import DoubleType
 spark = SparkSession.builder.appName("GBTModelPrediction").getOrCreate()
 
@@ -13,35 +13,33 @@ for i, stage in enumerate(model.stages):
     print(f"Stage {i}: {stage.__class__.__name__}")
 
 numeric_cols = [
-    'HDD18_3', 'CDD0', 'CDD10', 'PRECTOT', 'RH2M',
-    'T2M', 'T2M_MIN', 'T2M_MAX', 'ALLSKY',
-    'day_of_week', 'month', 'year',
-    'temp_diff', 'temp_avg', 'HOLIDAY',
-    'ENERGY_lag1', 'ENERGY_lag2' ,
-    'energy_ma_3', 'energy_std_3'
+    'energy_ma_3', 'ENERGY_lag1', 'ENERGY_lag2',
+    'energy_std_3', 'HOLIDAY', 'HDD18_3','temp_avg'
 ]
 
 data = spark.read.parquet(r"Data\featured_data")
 
 
-def data_sample(data,numeric_cols):
+
+def data_sample(data, numeric_cols):
     df_sample = data.sample(withReplacement=False, fraction=0.05, seed=42)
 
     def add_noise(value, intensity=0.10):
-        if value is None:
-            return None
-        noise = random.gauss(0, abs(value) * intensity)
-        return round(value + noise, 2)
+        try:
+            if value is None:
+                return None
+            val = float(value)
+            noise = random.gauss(0, abs(val) * intensity)
+            return round(val + noise, 2)
+        except:
+            return value  
 
-    add_noise_udf = udf(lambda x: add_noise(x, intensity=0.05), DoubleType())
-
-    df_sample = df_sample.select(numeric_cols)
+    add_noise_udf = udf(add_noise, DoubleType())
 
     for col_name in numeric_cols:
         df_sample = df_sample.withColumn(col_name, add_noise_udf(col(col_name)))
 
-    print(df_sample.show(10))
-
+    df_sample.show(10)
     return df_sample
 ##################################### model v1 #################################
 
@@ -58,9 +56,28 @@ model_path = "D:\Programming\Data_Engineering\Apache_Spark\project\power_consump
 
 model = PipelineModel.load(model_path)
 numeric_cols = numeric_cols + ["season"]
+for i, stage in enumerate(model.stages):
+    print(f"Stage {i}: {stage.__class__.__name__}")
+
 
 
 df_sample = data_sample(data,numeric_cols)
+
+print(df_sample.columns)
+
+df_sample = df_sample.withColumn("season", col("season").cast("string"))
+df_sample = df_sample.withColumn("season", when(col("season").isNull(), lit("unknown")).otherwise(col("season")))
+allowed_seasons = ["spring", "summer", "fall", "winter"]
+df_sample = df_sample.withColumn(
+    "season",
+    when(col("season").isin(allowed_seasons), col("season")).otherwise(lit("spring"))
+)
+
+
+for stage in model.stages:
+    if stage.__class__.__name__ == "StringIndexerModel":
+        print(f"StringIndexer input col: {stage.getInputCol()}")
+
 predictions = model.transform(df_sample)
 
 print(predictions.select("prediction").show(truncate=False))
