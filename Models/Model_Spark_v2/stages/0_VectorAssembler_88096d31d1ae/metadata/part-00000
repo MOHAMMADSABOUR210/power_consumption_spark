@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1753528421322,"sparkVersion":"3.5.1","uid":"VectorAssembler_88096d31d1ae","paramMap":{"inputCols":["energy_ma_3","ENERGY_lag1","ENERGY_lag2","energy_std_3","HOLIDAY","HDD18_3","temp_avg"],"outputCol":"features_vec"},"defaultParamMap":{"handleInvalid":"error","outputCol":"VectorAssembler_88096d31d1ae__output"}}
