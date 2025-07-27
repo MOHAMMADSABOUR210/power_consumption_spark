@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.ml import PipelineModel
 import random
-from pyspark.sql.functions import col, udf,when, lit
+from pyspark.sql.functions import col, udf, lit
 from pyspark.sql.types import DoubleType
 spark = SparkSession.builder.appName("GBTModelPrediction").getOrCreate()
 

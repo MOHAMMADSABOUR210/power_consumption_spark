@@ -1,9 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.ml.feature import VectorAssembler,StringIndexer,MinMaxScaler
-from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.regression import RandomForestRegressor , GBTRegressor
-import datetime
+from pyspark.ml.regression import  GBTRegressor
 from pyspark.sql.functions import  avg
 from pyspark.ml import Pipeline
 import os
